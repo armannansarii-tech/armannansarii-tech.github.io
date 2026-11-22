@@ -377,10 +377,12 @@ const FadeIn: React.FC<FadeInProps> = ({
   as = 'div',
 }) => {
   const MotionComponent = useMemo(() => {
-    const motionMap = motion as unknown as Record<string, React.ElementType>;
-    if (motionMap && motionMap[as]) {
-      return motionMap[as];
-    }
+    if (as === 'nav') return motion.nav;
+    if (as === 'section') return motion.section;
+    if (as === 'header') return motion.header;
+    if (as === 'footer') return motion.footer;
+    if (as === 'span') return motion.span;
+    if (as === 'p') return motion.p;
     return motion.div;
   }, [as]);
 
@@ -3210,5 +3212,62 @@ export default function App() {
         onInquire={() => setIsContactOpen(true)}
       />
     </div>
+  );
+}
+
+// ============================================================================
+// SAFE ERROR BOUNDARY WRAPPER
+// ============================================================================
+
+interface ErrorBoundaryState {
+  hasError: boolean;
+  errorMessage: string;
+}
+
+class PortfolioErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  ErrorBoundaryState
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false, errorMessage: '' };
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return {
+      hasError: true,
+      errorMessage: error?.message || 'Unexpected rendering error',
+    };
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="min-h-screen w-full bg-[#0C0C0C] text-[#D7E2EA] flex flex-col items-center justify-center p-6 text-center font-sans">
+          <h2 className="text-2xl font-bold uppercase tracking-widest mb-2">
+            Portfolio Recovery Mode
+          </h2>
+          <p className="text-sm text-[#D7E2EA]/70 max-w-md mb-6">
+            {this.state.errorMessage}
+          </p>
+          <button
+            type="button"
+            onClick={() => this.setState({ hasError: false, errorMessage: '' })}
+            className="rounded-full border border-[#D7E2EA] px-6 py-2.5 text-xs uppercase tracking-widest hover:bg-white/10 transition-colors cursor-pointer"
+          >
+            Reload Interface
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+export function RootPortfolio() {
+  return (
+    <PortfolioErrorBoundary>
+      <App />
+    </PortfolioErrorBoundary>
   );
 }
